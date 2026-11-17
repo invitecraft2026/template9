@@ -5,16 +5,16 @@ import { Reveal } from "./Reveal";
 
 export function Footer() {
   return (
-    <footer className="relative bg-background px-6 pt-16 pb-14 text-center">
+    <footer className="relative bg-blossom px-6 pt-16 pb-14 text-center">
       <Reveal>
         <Divider />
 
-        {/* Sign-off - rose gold */}
+        {/* Sign-off - holly red */}
         <p className="mt-8 text-[0.62rem] font-semibold uppercase tracking-[0.26em] text-gold">
           {wedding.footer.signOff}
         </p>
 
-        {/* Initials - deep plum */}
+        {/* Initials - midnight navy */}
         <p className="font-script mt-3 text-4xl text-deep sm:text-5xl">
           {wedding.initials}
         </p>
@@ -24,7 +24,7 @@ export function Footer() {
           {wedding.footer.thanks}
         </p>
 
-        {/* Date - muted plum */}
+        {/* Date - muted navy */}
         <p className="mt-8 text-[0.55rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           {wedding.date}
         </p>

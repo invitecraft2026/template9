@@ -33,7 +33,7 @@ export function VenueSection() {
 
         <Reveal delay={0.2}>
           <div className="mt-6 text-center">
-            {/* Venue name - deep plum */}
+            {/* Venue name - midnight navy */}
             <h3 className="text-lg font-semibold uppercase tracking-[0.2em] text-deep">
               {wedding.venue.name}
             </h3>
@@ -43,7 +43,7 @@ export function VenueSection() {
               {wedding.venue.address}
             </p>
 
-            {/* Button - solid sakura rose, white text, soft pink border */}
+            {/* Button - solid holly red, white text, candle-gold border */}
             <a
               href={mapsDirectionsUrl(wedding.venue.mapsQuery)}
               target="_blank"
@@ -62,7 +62,7 @@ export function VenueSection() {
                 uppercase
                 tracking-[0.24em]
                 text-primary-foreground
-                shadow-[0_6px_20px_rgba(166,82,117,0.30)]
+                shadow-[0_6px_20px_color-mix(in_oklab,var(--gold)_35%,transparent)]
                 transition-all
                 duration-300
                 hover:bg-deep

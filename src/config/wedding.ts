@@ -1,7 +1,8 @@
+
 /**
  * CENTRAL WEDDING CONFIGURATION
  * Every editable detail of the invitation lives here.
- * Sample wedding details for Olivia & Ethan.
+ * Sample wedding details for Isabella & Noah.
  * Replace the values below with the real wedding details.
  */
 
@@ -16,154 +17,154 @@ export type WeddingEvent = {
 
 export const wedding = {
   bride: {
-    firstName: "Olivia",
-    fullName: "Olivia Bennett",
-    parents: "Daughter of Mr. Oliver Bennett & Mrs. Sophia Bennett",
+    firstName: "Isabella",
+    fullName: "Isabella Rose Anderson",
+    parents: "Daughter of Mr. James Anderson & Mrs. Emily Anderson",
   },
 
   groom: {
-    firstName: "Ethan",
-    fullName: "Ethan Mitchell",
-    parents: "Son of Mr. William Mitchell & Mrs. Charlotte Mitchell",
+    firstName: "Noah",
+    fullName: "Noah Alexander Carter",
+    parents: "Son of Mr. Daniel Carter & Mrs. Grace Carter",
   },
 
-  initials: "O & E",
+  initials: "I & N",
 
   /** Human readable date + time */
-  date: "Saturday, 20 November 2027",
+  date: "Saturday, 12 December 2026",
 
   dayName: "Saturday",
-  dayNumber: "20",
-  monthName: "November",
-  year: "2027",
+  dayNumber: "12",
+  monthName: "December",
+  year: "2026",
 
-  time: "4:30 PM onwards",
+  time: "5:00 PM onwards",
 
   /** Used by countdown + calendar */
-  dateISO: "2027-11-20T16:30:00",
-  endISO: "2027-11-20T22:30:00",
+  dateISO: "2026-12-12T17:00:00",
+  endISO: "2026-12-12T23:00:00",
 
-  welcomeLine: "With love from our families",
+  welcomeLine: "Together with our beloved families",
 
-  welcomeTitle: "A Celebration of Love",
+  welcomeTitle: "Forever Starts Here",
 
   welcomeJoin: "between",
 
   venue: {
-    name: "The Willow Creek Manor",
-    address: "Rosewood Avenue, Vyttila, Kochi, Kerala 682019",
-    mapsQuery: "The Willow Creek Manor, Vyttila, Kochi, Kerala",
+    name: "The Ivory Garden Estate",
+    address: "Palm Grove Road, Kakkanad, Kochi, Kerala 682030",
+    mapsQuery: "The Ivory Garden Estate, Kakkanad, Kochi, Kerala",
   },
 
   events: [
     {
       id: "welcome",
-      title: "Welcome Evening",
-      date: "Friday, 19 November 2027",
-      time: "6:00 PM",
-      venue: "The Willow Creek Manor, Garden Pavilion",
+      title: "Welcome Celebration",
+      date: "Friday, 11 December 2026",
+      time: "6:30 PM",
+      venue: "The Ivory Garden Estate, Rose Garden",
       icon: "lantern",
     },
 
     {
       id: "ceremony",
       title: "Wedding Ceremony",
-      date: "Saturday, 20 November 2027",
-      time: "4:30 PM",
-      venue: "The Willow Creek Manor, Garden",
+      date: "Saturday, 12 December 2026",
+      time: "5:00 PM",
+      venue: "The Ivory Garden Estate, Garden Pavilion",
       icon: "crescent",
     },
 
     {
       id: "reception",
-      title: "Dinner & Reception",
-      date: "Saturday, 20 November 2027",
-      time: "6:00 PM",
-      venue: "The Willow Creek Manor, Grand Hall",
+      title: "Wedding Reception",
+      date: "Saturday, 12 December 2026",
+      time: "7:00 PM",
+      venue: "The Ivory Garden Estate, Grand Ballroom",
       icon: "rings",
     },
 
     {
       id: "brunch",
       title: "Farewell Brunch",
-      date: "Sunday, 21 November 2027",
-      time: "10:00 AM",
-      venue: "The Willow Creek Manor, Garden Terrace",
+      date: "Sunday, 13 December 2026",
+      time: "10:30 AM",
+      venue: "The Ivory Garden Estate, Garden Terrace",
       icon: "dinner",
     },
   ] satisfies WeddingEvent[],
 
   dressCode: {
     description:
-      "Join us in celebrating our special day in timeless attire inspired by romantic garden hues, muted pastels, and elegant natural tones.",
+      "Celebrate with us in elegant attire inspired by soft ivory, champagne gold, dusty rose, and the timeless beauty of a romantic garden.",
 
     colors: [
       {
-        name: "Pearl White",
-        hex: "#F5F1E8",
+        name: "Ivory",
+        hex: "#F5F0E6",
       },
       {
-        name: "Terracotta",
-        hex: "#C47D63",
+        name: "Champagne Gold",
+        hex: "#D6BC8B",
       },
       {
-        name: "Olive Green",
-        hex: "#7B8060",
+        name: "Dusty Rose",
+        hex: "#C98F91",
       },
       {
-        name: "Midnight Blue",
-        hex: "#293B56",
+        name: "Sage Green",
+        hex: "#A3AD91",
       },
       {
-        name: "Blush Pink",
-        hex: "#E2B8B0",
+        name: "Mocha Brown",
+        hex: "#8A7163",
       },
       {
-        name: "Soft Lavender",
-        hex: "#B9A8C9",
+        name: "Misty Blue",
+        hex: "#A9BBCD",
       },
       {
-        name: "Golden Sand",
-        hex: "#C8AC7D",
+        name: "Burgundy",
+        hex: "#783F4D",
       },
     ],
   },
 
   invitationMessage:
-    "Some moments become memories, and some memories become forever. With grateful hearts and the blessings of our families, we invite you to join Olivia and Ethan as they begin their beautiful journey together. Your presence will make our celebration even more meaningful.",
+    "Two hearts, two stories, and one beautiful forever. With the love and blessings of our families, we joyfully invite you to celebrate as Isabella and Noah begin their journey as one. Your presence will make our special day truly unforgettable.",
 
   quote:
-    "“The best thing to hold onto in life is each other.” — Audrey Hepburn",
+    "“Whatever our souls are made of, his and mine are the same.” — Emily Brontë",
 
   guestInformation: [
     {
       title: "Arrival",
-      body: "We would love for you to arrive 20–30 minutes before the ceremony so you can settle in and enjoy the occasion.",
+      body: "Please arrive 20–30 minutes before the ceremony to settle in and enjoy the celebration.",
     },
 
     {
       title: "Dress Code",
-      body: "Garden-inspired formal or semi-formal attire in pearl white, terracotta, olive, blush, and other muted tones is encouraged.",
+      body: "Elegant formal or semi-formal attire in ivory, champagne, dusty rose, sage, and other soft, complementary tones is encouraged.",
     },
 
     {
       title: "Family",
-      body: "Our celebration is made more special by the people we love. Families and children are warmly welcome.",
+      body: "Our celebration is all about love and togetherness. Families and children are warmly welcome.",
     },
 
     {
       title: "Parking",
-      body: "Guest parking will be available at the venue. Our team will be happy to guide you upon arrival.",
+      body: "Parking facilities will be available at the venue. Please follow the signs and directions from our venue team.",
     },
 
     {
       title: "Photography",
-      body: "Please feel free to capture the joyful moments. During the ceremony, we kindly request that guests avoid flash photography and keep the aisle clear.",
+      body: "We would love for you to capture beautiful memories. During the ceremony, please avoid flash photography and keep the aisle clear.",
     },
 
     {
       title: "Gifts",
-      body: "Your love, blessings, and presence are the most precious gifts we could receive.",
+      body: "Your love, blessings, and presence are the greatest gifts we could ever ask for.",
     },
   ],
 
@@ -171,9 +172,9 @@ export const wedding = {
   musicSrc: "",
 
   footer: {
-    signOff: "With Love, Olivia & Ethan",
+    signOff: "With Love, Isabella & Noah",
     thanks:
-      "Thank you for being part of our story. We cannot wait to celebrate this unforgettable beginning with you.",
+      "Thank you for being part of our love story. We look forward to celebrating a beautiful new beginning with you.",
   },
 } as const;
 

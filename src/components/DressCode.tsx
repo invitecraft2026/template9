@@ -15,11 +15,11 @@ export function DressCode() {
         <Reveal delay={0.1}>
           <img
             src={partyImg}
-            alt="Wedding party in soft pink, lavender and white under a cherry blossom arch"
+            alt="Wedding party in navy, burgundy and silver under a pine and poinsettia arch"
             loading="lazy"
             width={1100}
             height={1459}
-            className="mx-auto mt-8 h-auto w-full mix-blend-multiply drop-shadow-[0_10px_18px_rgba(91,52,72,0.12)]"
+            className="mx-auto mt-8 h-auto w-full mix-blend-multiply drop-shadow-[0_10px_18px_color-mix(in_oklab,var(--deep-text)_14%,transparent)]"
           />
         </Reveal>
 

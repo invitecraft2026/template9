@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import {
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -18,19 +17,24 @@ import scratchBackground from "@/assets/scratch-background.png";
 /*  THEME: change these colors per invitation theme                    */
 /* ------------------------------------------------------------------ */
 const THEME = {
-  /** Scratch foil gradient (pearl pink -> light blush -> soft lavender) */
-  foil: ["#f3c9d5", "#fdf0f3", "#d6c4e8"] as const,
+  /** Scratch foil gradient (silver-blue -> frost white -> pale periwinkle),
+   *  chosen to match the pearl ring of the frame */
+  foil: ["#a9b8d4", "#f1f5fb", "#c3cde6"] as const,
 
   /** Fine rings drawn on the foil */
-  ring: "rgba(255,255,255,0.32)",
+  ring: "rgba(255,255,255,0.38)",
 
-  /** Glitter colors (white sparkle + champagne gold sparkle) */
+  /** Snowflake drawn in the middle of the foil */
+  emblem: "rgba(255,255,255,0.7)",
+
+  /** Glitter colors (snow-white sparkle + candle-gold sparkle) */
   glitterWhite: "255,255,255",
-  glitterGold: "232,201,138",
+  glitterGold: "224,184,96",
 
-  /** Text colors of the revealed value */
+  /** Revealed text colors and the paper color behind them */
   label: "var(--muted-foreground)",
   value: "var(--gold)",
+  paper: "var(--soft-white)",
 };
 
 /** Share of the circle that must be scratched before it auto-reveals */
@@ -43,27 +47,34 @@ const DEBUG =
 
 /* ------------------------------------------------------------------ */
 /*  IMAGE GEOMETRY                                                     */
-/*  The circles are found automatically by scanning the image for the  */
-/*  3 big pure-white circles. If detection ever fails, these fallback  */
-/*  numbers (in image pixels) are used instead.                        */
+/*  The three frame openings are found automatically: the code looks   */
+/*  for paper-colored areas (transparent, white or cream) that are     */
+/*  completely enclosed by the frames. If that ever fails, the         */
+/*  fallback numbers below (image pixels) are used instead.            */
 /* ------------------------------------------------------------------ */
+type Circle = {
+  cx: number; // horizontal center
+  cy: number; // vertical center
+  r: number; // radius
+};
+
 type Geo = {
   w: number; // image width
   h: number; // image height
-  cy: number; // vertical center of all 3 circles
-  r: number; // radius of the white inner circle
-  cx: number[]; // horizontal centers: left, middle, right
+  circles: Circle[]; // left, middle, right
 };
 
 const FALLBACK: Geo = {
   w: 1376,
   h: 768,
-  cy: 382,
-  r: 127,
-  cx: [355, 688, 1021],
+  circles: [
+    { cx: 291, cy: 381, r: 127 },
+    { cx: 688, cy: 381, r: 127 },
+    { cx: 1085, cy: 381, r: 127 },
+  ],
 };
 
-/** Finds the 3 white circles in the image. Returns null if it cannot. */
+/** Finds the 3 frame openings in the image. Returns null if it cannot. */
 function detectCircles(img: HTMLImageElement): Geo | null {
   const w = img.naturalWidth;
   const h = img.naturalHeight;
@@ -90,114 +101,228 @@ function detectCircles(img: HTMLImageElement): Geo | null {
     return null;
   }
 
-  const isWhite = (x: number, y: number) => {
-    if (x < 0 || y < 0 || x >= w || y >= h) return false;
+  const n = w * h;
 
-    const i = (y * w + x) * 4;
+  // 1 = "paper": transparent, or white / cream with almost no color
+  const paper = new Uint8Array(n);
 
-    return (
-      data[i + 3] > 200 &&
-      data[i] >= 240 &&
-      data[i + 1] >= 240 &&
-      data[i + 2] >= 240
-    );
-  };
+  for (let i = 0; i < n; i++) {
+    const p = i * 4;
 
-  /** How many white pixels in a straight line from (x, y) */
-  const extend = (
-    x: number,
-    y: number,
-    dx: number,
-    dy: number
-  ) => {
-    let n = 0;
+    if (data[p + 3] < 40) {
+      paper[i] = 1;
+      continue;
+    }
 
-    while (isWhite(x + dx * (n + 1), y + dy * (n + 1))) n++;
+    const r = data[p];
+    const g = data[p + 1];
+    const b = data[p + 2];
 
-    return n;
-  };
+    if (
+      Math.min(r, g, b) >= 228 &&
+      Math.max(r, g, b) - Math.min(r, g, b) <= 16
+    ) {
+      paper[i] = 1;
+    }
+  }
 
-  const minRun = w * 0.1;
-  const maxRun = w * 0.25;
+  // label: 0 = not visited, -1 = outside, >0 = enclosed area number
+  const label = new Int32Array(n);
+  const stack = new Int32Array(n);
 
-  /** White runs on one row that are circle-sized */
-  const rowRuns = (y: number) => {
-    const runs: [number, number][] = [];
-    let start = -1;
+  const fill = (start: number, id: number) => {
+    let sp = 0;
+    stack[sp++] = start;
+    label[start] = id;
 
-    for (let x = 0; x <= w; x++) {
-      const white = x < w && isWhite(x, y);
+    let area = 0;
+    let minX = w;
+    let maxX = 0;
+    let minY = h;
+    let maxY = 0;
 
-      if (white && start < 0) start = x;
+    while (sp > 0) {
+      const i = stack[--sp];
+      const x = i % w;
+      const y = (i - x) / w;
 
-      if (!white && start >= 0) {
-        const len = x - start;
+      area++;
 
-        if (len >= minRun && len <= maxRun) {
-          runs.push([start, x - 1]);
-        }
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
 
-        start = -1;
+      if (x > 0 && paper[i - 1] && !label[i - 1]) {
+        label[i - 1] = id;
+        stack[sp++] = i - 1;
+      }
+
+      if (x < w - 1 && paper[i + 1] && !label[i + 1]) {
+        label[i + 1] = id;
+        stack[sp++] = i + 1;
+      }
+
+      if (y > 0 && paper[i - w] && !label[i - w]) {
+        label[i - w] = id;
+        stack[sp++] = i - w;
+      }
+
+      if (y < h - 1 && paper[i + w] && !label[i + w]) {
+        label[i + w] = id;
+        stack[sp++] = i + w;
       }
     }
 
-    return runs;
+    return { area, minX, maxX, minY, maxY };
   };
 
-  // Try the middle row first, then rows a little above / below
-  let runs: [number, number][] = [];
+  // Everything paper-colored that touches the image edge is "outside"
+  for (let x = 0; x < w; x++) {
+    if (paper[x] && !label[x]) fill(x, -1);
 
-  for (const k of [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5]) {
-    const y = Math.round(h / 2 + k * h * 0.03);
+    const b = (h - 1) * w + x;
 
-    runs = rowRuns(y);
-
-    if (runs.length === 3) break;
+    if (paper[b] && !label[b]) fill(b, -1);
   }
 
-  if (runs.length !== 3) return null;
+  for (let y = 0; y < h; y++) {
+    const l = y * w;
+    const r = y * w + (w - 1);
 
-  const cxs: number[] = [];
-  const cys: number[] = [];
-  const rs: number[] = [];
-
-  for (const [s, e] of runs) {
-    let cx = (s + e) / 2;
-    let cy = Math.round(h / 2);
-    let r = (e - s + 1) / 2;
-
-    // Refine: measure top/bottom through cx, then left/right through cy
-    for (let pass = 0; pass < 3; pass++) {
-      const x = Math.round(cx);
-      const y = Math.round(cy);
-
-      const up = extend(x, y, 0, -1);
-      const down = extend(x, y, 0, 1);
-
-      cy = y + (down - up) / 2;
-
-      const yy = Math.round(cy);
-
-      const left = extend(x, yy, -1, 0);
-      const right = extend(x, yy, 1, 0);
-
-      cx = x + (right - left) / 2;
-      r = (left + right + 1) / 2;
-    }
-
-    cxs.push(cx);
-    cys.push(cy);
-    rs.push(r);
+    if (paper[l] && !label[l]) fill(l, -1);
+    if (paper[r] && !label[r]) fill(r, -1);
   }
 
-  const cy = cys.reduce((a, b) => a + b, 0) / 3;
-  const r = rs.reduce((a, b) => a + b, 0) / 3;
+  // Paper-colored areas that are NOT outside are enclosed by a frame
+  const found: Circle[] = [];
+  let id = 0;
 
-  // Sanity checks: circles must be on one row and a sensible size
-  if (r < w * 0.03 || r > w * 0.15) return null;
-  if (Math.max(...cys) - Math.min(...cys) > h * 0.03) return null;
+  for (let i = 0; i < n; i++) {
+    if (!paper[i] || label[i]) continue;
 
-  return { w, h, cy, r, cx: cxs };
+    const c = fill(i, ++id);
+
+    const bw = c.maxX - c.minX + 1;
+    const bh = c.maxY - c.minY + 1;
+
+    // Must be circle-sized, round, and fairly solid
+    if (bw < w * 0.1 || bw > w * 0.3) continue;
+    if (bh < w * 0.1 || bh > w * 0.3) continue;
+    if (bw / bh < 0.8 || bw / bh > 1.25) continue;
+    if (c.area / ((Math.PI / 4) * bw * bh) < 0.8) continue;
+
+    found.push({
+      cx: (c.minX + c.maxX + 1) / 2,
+      cy: (c.minY + c.maxY + 1) / 2,
+      r: (bw + bh) / 4,
+    });
+  }
+
+  if (found.length !== 3) return null;
+
+  found.sort((a, b) => a.cx - b.cx);
+
+  // The three circles must sit on one row
+  const ys = found.map((c) => c.cy);
+
+  if (Math.max(...ys) - Math.min(...ys) > h * 0.03) return null;
+
+  return { w, h, circles: found };
+}
+
+/* ------------------------------------------------------------------ */
+/*  The scratch coating (silver-blue frosted foil with a snowflake)    */
+/* ------------------------------------------------------------------ */
+function paintFoil(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) return;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "source-over";
+
+  // Paint only inside the circle
+  ctx.beginPath();
+  ctx.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Base foil gradient
+  const base = ctx.createLinearGradient(0, 0, w, h);
+  base.addColorStop(0, THEME.foil[0]);
+  base.addColorStop(0.5, THEME.foil[1]);
+  base.addColorStop(1, THEME.foil[2]);
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, w, h);
+
+  // Fine concentric rings (like a polished disc)
+  ctx.strokeStyle = THEME.ring;
+  ctx.lineWidth = Math.max(1, w * 0.004);
+
+  for (let r = w * 0.04; r < w / 2; r += w * 0.025) {
+    ctx.beginPath();
+    ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Snowflake in the middle
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.strokeStyle = THEME.emblem;
+  ctx.lineWidth = Math.max(1.5, w * 0.014);
+  ctx.lineCap = "round";
+
+  for (let k = 0; k < 6; k++) {
+    ctx.save();
+    ctx.rotate((k * Math.PI) / 3);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -w * 0.25);
+    ctx.moveTo(0, -w * 0.16);
+    ctx.lineTo(-w * 0.07, -w * 0.225);
+    ctx.moveTo(0, -w * 0.16);
+    ctx.lineTo(w * 0.07, -w * 0.225);
+    ctx.moveTo(0, -w * 0.09);
+    ctx.lineTo(-w * 0.045, -w * 0.135);
+    ctx.moveTo(0, -w * 0.09);
+    ctx.lineTo(w * 0.045, -w * 0.135);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  // Glitter: mostly white, some candle gold
+  for (let i = 0; i < 280; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    const s = (Math.random() * 1.4 + 0.5) * (w / 180);
+    const gold = Math.random() < 0.25;
+
+    ctx.fillStyle = `rgba(${
+      gold ? THEME.glitterGold : THEME.glitterWhite
+    },${0.25 + Math.random() * 0.5})`;
+    ctx.fillRect(x, y, s, s);
+  }
+
+  // Soft light highlight
+  const light = ctx.createRadialGradient(
+    w * 0.3,
+    h * 0.3,
+    0,
+    w * 0.3,
+    h * 0.3,
+    w * 0.65
+  );
+  light.addColorStop(0, "rgba(255,255,255,0.45)");
+  light.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = light;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.restore();
 }
 
 /* ------------------------------------------------------------------ */
@@ -206,12 +331,12 @@ function detectCircles(img: HTMLImageElement): Geo | null {
 function ScratchBox({
   label,
   value,
-  cx,
+  circle,
   geo,
 }: {
   label: string;
   value: string;
-  cx: number;
+  circle: Circle;
   geo: Geo;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -226,74 +351,6 @@ function ScratchBox({
   } | null>(null);
 
   const [revealed, setRevealed] = useState(false);
-
-  /** Pearlescent pink + lavender foil with champagne glitter */
-  const paintCoating = useCallback(
-    (canvas: HTMLCanvasElement) => {
-      const ctx = canvas.getContext("2d");
-
-      if (!ctx) return;
-
-      const w = canvas.width;
-      const h = canvas.height;
-
-      ctx.save();
-      ctx.globalCompositeOperation = "source-over";
-
-      // Paint only inside the circle
-      ctx.beginPath();
-      ctx.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2);
-      ctx.clip();
-
-      // Base foil gradient
-      const base = ctx.createLinearGradient(0, 0, w, h);
-      base.addColorStop(0, THEME.foil[0]);
-      base.addColorStop(0.5, THEME.foil[1]);
-      base.addColorStop(1, THEME.foil[2]);
-      ctx.fillStyle = base;
-      ctx.fillRect(0, 0, w, h);
-
-      // Fine concentric rings (like a polished disc)
-      ctx.strokeStyle = THEME.ring;
-      ctx.lineWidth = Math.max(1, w * 0.004);
-
-      for (let r = w * 0.04; r < w / 2; r += w * 0.025) {
-        ctx.beginPath();
-        ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // Glitter: mostly white, some champagne gold
-      for (let i = 0; i < 280; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h;
-        const s = (Math.random() * 1.4 + 0.5) * (w / 180);
-        const gold = Math.random() < 0.3;
-
-        ctx.fillStyle = `rgba(${
-          gold ? THEME.glitterGold : THEME.glitterWhite
-        },${0.25 + Math.random() * 0.5})`;
-        ctx.fillRect(x, y, s, s);
-      }
-
-      // Soft light highlight
-      const light = ctx.createRadialGradient(
-        w * 0.3,
-        h * 0.3,
-        0,
-        w * 0.3,
-        h * 0.3,
-        w * 0.65
-      );
-      light.addColorStop(0, "rgba(255,255,255,0.45)");
-      light.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = light;
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.restore();
-    },
-    []
-  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -319,7 +376,7 @@ function ScratchBox({
       canvas.width = Math.round(rect.width * dpr);
       canvas.height = Math.round(rect.height * dpr);
 
-      paintCoating(canvas);
+      paintFoil(canvas);
     };
 
     setupCanvas();
@@ -328,7 +385,7 @@ function ScratchBox({
     observer.observe(wrap);
 
     return () => observer.disconnect();
-  }, [paintCoating]);
+  }, []);
 
   /** Share of the circle (not the square) that is already scratched */
   const scratchedRatio = () => {
@@ -434,24 +491,28 @@ function ScratchBox({
     }
   };
 
-  // +1 image pixel so the foil fully covers the white edge
-  const diameter = (geo.r + 1) * 2;
+  // +2 image pixels so the foil fully covers the inner edge of the frame
+  const diameter = (circle.r + 2) * 2;
 
   return (
     <div
       ref={wrapRef}
-      className="absolute select-none overflow-hidden rounded-full bg-white"
+      className="absolute select-none overflow-hidden rounded-full"
       style={{
-        left: `${(cx / geo.w) * 100}%`,
-        top: `${(geo.cy / geo.h) * 100}%`,
+        backgroundColor: THEME.paper,
+        left: `${(circle.cx / geo.w) * 100}%`,
+        top: `${(circle.cy / geo.h) * 100}%`,
         width: `${(diameter / geo.w) * 100}%`,
         aspectRatio: "1 / 1",
         transform: "translate(-50%, -50%)",
         outline: DEBUG ? "2px solid red" : undefined,
       }}
     >
-      {/* Revealed value, sits on pure white */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full bg-white text-center">
+      {/* Revealed value, sits on the paper color */}
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center rounded-full text-center"
+        style={{ backgroundColor: THEME.paper }}
+      >
         <p
           className="font-semibold uppercase tracking-[0.2em]"
           style={{
@@ -581,7 +642,7 @@ export function ScratchReveal() {
                 key={item.label}
                 label={item.label}
                 value={item.value}
-                cx={geo.cx[i]}
+                circle={geo.circles[i]}
                 geo={geo}
               />
             ))}

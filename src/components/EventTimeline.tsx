@@ -21,57 +21,33 @@ const illustrationByIcon: Record<WeddingEvent["icon"], string> = {
 /*  Decorations (all use the theme colors from styles.css)             */
 /* ------------------------------------------------------------------ */
 
-/** A five-petal cherry blossom */
-function Blossom({ className }: { className?: string }) {
+/** A six-arm snowflake (used for the markers and the falling snow) */
+function Flake({ className }: { className?: string }) {
   return (
     <svg
       viewBox="-16 -16 32 32"
       className={className}
+      fill="none"
       aria-hidden="true"
+      style={{
+        stroke: "var(--lavender)",
+        strokeWidth: 1.4,
+        strokeLinecap: "round",
+      }}
     >
-      {[0, 72, 144, 216, 288].map((angle) => (
-        <path
-          key={angle}
-          transform={`rotate(${angle})`}
-          d="M0 0 C -5 -4 -6 -12 -2.5 -14 C -1.5 -12.5 -0.8 -13 0 -12 C 0.8 -13 1.5 -12.5 2.5 -14 C 6 -12 5 -4 0 0Z"
-          style={{
-            fill: "var(--champagne)",
-            stroke: "var(--gold-soft)",
-            strokeWidth: 0.6,
-          }}
-        />
-      ))}
-      <circle r="2" style={{ fill: "var(--gold-soft)" }} />
       {[0, 60, 120, 180, 240, 300].map((angle) => (
-        <circle
-          key={angle}
-          cx={Math.cos((angle * Math.PI) / 180) * 3.6}
-          cy={Math.sin((angle * Math.PI) / 180) * 3.6}
-          r="0.7"
-          style={{ fill: "var(--gold)" }}
-        />
+        <g key={angle} transform={`rotate(${angle})`}>
+          <path d="M0 0 L0 -13" />
+          <path d="M0 -8.5 L-3.4 -12 M0 -8.5 L3.4 -12" />
+          <path d="M0 -5 L-2.4 -7.4 M0 -5 L2.4 -7.4" />
+        </g>
       ))}
+      <circle r="1.8" style={{ fill: "var(--gold-soft)", stroke: "none" }} />
     </svg>
   );
 }
 
-/** A single falling petal */
-function PetalShape({ className }: { className?: string }) {
-  return (
-    <svg viewBox="-8 -8 16 16" className={className} aria-hidden="true">
-      <path
-        d="M0 6 C -6 2 -6 -5 -2 -7 C -1 -5.5 1 -5.5 2 -7 C 6 -5 6 2 0 6Z"
-        style={{
-          fill: "var(--champagne)",
-          stroke: "var(--gold-soft)",
-          strokeWidth: 0.5,
-        }}
-      />
-    </svg>
-  );
-}
-
-/** Slowly falling petals (skipped for people who prefer reduced motion) */
+/** Slowly falling snow (skipped for people who prefer reduced motion) */
 const PETALS = [
   { left: "6%", size: 14, duration: 19, delay: 0, sway: 18 },
   { left: "20%", size: 10, duration: 24, delay: 6, sway: -14 },
@@ -109,7 +85,7 @@ function FallingPetals() {
             ease: "linear",
           }}
         >
-          <PetalShape className="h-full w-full" />
+          <Flake className="h-full w-full" />
         </motion.span>
       ))}
     </div>
@@ -121,7 +97,7 @@ function Medallion({ src }: { src: string }) {
   return (
     <div className="relative grid aspect-square h-24 w-24 shrink-0 place-items-center sm:h-28 sm:w-28">
       {/* soft blush disc */}
-      <span className="absolute inset-0 rounded-full bg-gradient-to-br from-soft-white via-cream to-champagne/60 shadow-[0_10px_26px_-10px_rgba(166,82,117,0.45)]" />
+      <span className="absolute inset-0 rounded-full bg-gradient-to-br from-soft-white via-cream to-champagne/60 shadow-[0_10px_26px_-10px_color-mix(in_oklab,var(--deep-text)_45%,transparent)]" />
 
       {/* pearl ring */}
       <span className="absolute inset-0 rounded-full border-[3px] border-dotted border-soft-white" />
@@ -167,11 +143,11 @@ function Pin() {
   );
 }
 
-/** Blossom marker that sits in the center gutter, on top of the line */
+/** Snowflake marker that sits in the center gutter, on top of the line */
 function Marker() {
   return (
-    <span className="relative z-10 grid h-7 w-7 shrink-0 place-items-center justify-self-center rounded-full border border-gold-soft bg-background shadow-[0_0_14px_rgba(166,82,117,0.35)]">
-      <Blossom className="h-5 w-5" />
+    <span className="relative z-10 grid h-7 w-7 shrink-0 place-items-center justify-self-center rounded-full border border-gold-soft bg-background shadow-[0_0_14px_color-mix(in_oklab,var(--gold-soft)_55%,transparent)]">
+      <Flake className="h-5 w-5" />
     </span>
   );
 }
@@ -186,7 +162,7 @@ function EventInfo({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-beige/80 bg-soft-white/70 px-3 py-3 shadow-[0_8px_24px_-14px_rgba(91,52,72,0.35)] backdrop-blur-[2px] ${
+      className={`rounded-2xl border border-beige/80 bg-soft-white/70 px-3 py-3 shadow-[0_8px_24px_-14px_color-mix(in_oklab,var(--deep-text)_35%,transparent)] backdrop-blur-[2px] ${
         align === "right" ? "text-right" : "text-left"
       }`}
     >
@@ -268,7 +244,7 @@ export function EventTimeline() {
 
           {/* End of the timeline */}
           <div className="relative mt-10 flex justify-center">
-            <Blossom className="h-9 w-9 drop-shadow-[0_2px_8px_rgba(166,82,117,0.35)]" />
+            <Flake className="h-9 w-9 drop-shadow-[0_2px_8px_color-mix(in_oklab,var(--gold-soft)_55%,transparent)]" />
           </div>
         </div>
       </div>
